@@ -95,6 +95,17 @@ def process_attack(attack: dict[str, list]):
 number_cylinders = [2,2]  # 1 marked point on top and 2 on bottom
 starting_cylinders = ["A", "A"]
 cylinders = generate_cylinders(number_cylinders, starting_cylinders)
+first = {'A': -1, 'B': -1}
+
+
+for i in range(len(cylinders)):
+    if cylinders[i].label == 'A':
+        first['A'] = i 
+        break 
+for i in range(len(cylinders)):
+    if cylinders[i].label == 'B':
+        first['B'] = i
+        break
 
 """
 The above code corresponds to the following translation surface:
@@ -120,9 +131,17 @@ for each cylinder, I want to get how much its being attacked.
 Fix an A-cylinder C. Let h(t) be the height of C where t > 1. Let s be a vertical line segment that starts at a cone point, travels southward exclusively through B-cylinders before ending at the top boundary of C. The length L of s on X is the sum (with multiplicity) of the heights of the B-cylinders that s passes through. So on X_t (t > 1), s cuts into C a distance of L(t-1). This shows the following.
 """
 
-attacks = compute_attacks(cylinders, number_cylinders)
-print(attacks)
+attack_data = compute_attacks(cylinders, number_cylinders)
+attack_formulas = []
 
 for i in range(len(cylinders)):
-    print(cylinders[i].name(), " -> ", pos(cylinders[i].name()) - pos('t') *
-          (process_attack(attacks[i]["top"])+process_attack(attacks[i]["bottom"])), sep='')
+    attack_formulas.append(pos(cylinders[i].label + '_0') 
+        * (process_attack(attack_data[i]["top"])+process_attack(attack_data[i]["bottom"]))
+        - pos(cylinders[i].name()) 
+        * (process_attack(attack_data[first[cylinders[i].label]]["top"])
+        + process_attack(attack_data[first[cylinders[i].label]]["bottom"])))
+    print(cylinders[i].name() + ">0,")
+    if i not in first.values():
+        print(attack_formulas[i], "=0,", sep='')
+
+
