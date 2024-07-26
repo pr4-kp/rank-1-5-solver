@@ -92,8 +92,8 @@ def process_attack(attack: dict[str, list]):
     return out
 
 
-number_cylinders = [2,2]  # 1 marked point on top and 2 on bottom
-starting_cylinders = ["A", "A"]
+number_cylinders = [2,3]  # 1 marked point on top and 2 on bottom
+starting_cylinders = ["A", "B"]
 cylinders = generate_cylinders(number_cylinders, starting_cylinders)
 first = {'A': -1, 'B': -1}
 
@@ -120,15 +120,6 @@ The above code corresponds to the following translation surface:
 ├────────────────────┤                      
 │         B2         │                      
 └────────────────────┘                      
-for each cylinder, I want to get how much its being attacked.
-- this is computed by the fastest attacking speed on top + fastest attacking speed on bottom
-- for example, A1 is being attacked at speed b1 on top and b3 on bottom so A1 will have height 
-
-    a1 - t(b1 + b3)
-
-- all the data i _really_ need is (b1 + b3)      
-
-Fix an A-cylinder C. Let h(t) be the height of C where t > 1. Let s be a vertical line segment that starts at a cone point, travels southward exclusively through B-cylinders before ending at the top boundary of C. The length L of s on X is the sum (with multiplicity) of the heights of the B-cylinders that s passes through. So on X_t (t > 1), s cuts into C a distance of L(t-1). This shows the following.
 """
 
 attack_data = compute_attacks(cylinders, number_cylinders)
@@ -145,3 +136,4 @@ for i in range(len(cylinders)):
         print(attack_formulas[i], "=0,", sep='')
 
 
+print(solve(attack_formulas + [pos('A_0')-1, pos('B_0')-1]))
