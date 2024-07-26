@@ -1,3 +1,5 @@
+from sympy import *
+
 class Cylinder:
     label: str 
     index: int
@@ -8,6 +10,10 @@ class Cylinder:
 
     def name(self) -> str:
         return self.label + "_" + str(self.index)
+
+
+def pos(num):
+    return Symbol(num, positive=True)
 
 def generate_cylinders(number_cylinders: list[int], starting_cylinders: list[str]) -> list[Cylinder]:
     cylinders: list[Cylinder] = []
@@ -38,6 +44,7 @@ def compute_attacks(cylinders, number_cylinders):
 
     def check_direction(start, index, direction):
         assert(direction == "top" or direction == "bottom")
+        attack = []
 
         if direction == "bottom":
             if cylinders[index].label != cylinders[(start + 1) % n].label:
@@ -61,7 +68,7 @@ def compute_attacks(cylinders, number_cylinders):
         # for most cases, it suffices to look up 2 and down 2 and sum it up
         check_direction(i, i, "bottom")
         check_direction(i, i, "top")
-
+        
         # for the first "long" cylinder, it could get attacked from 3 directions
         if i == number_cylinders[0]:
             check_direction(n, i, "top")
@@ -74,26 +81,16 @@ def compute_attacks(cylinders, number_cylinders):
 
 
 def process_attack(attack: dict[str, list]): 
-    if len(attack) == 0:
-        return ""
+    out = 0
     
-    if len(attack) == 1:
-        out = ""
-        for e in attack[0]:
-            out += e + "+"
-        return out
-    
-    out = "max("
     for a in attack:
-        if len(a) == 1:
-            out += a[0]
-        else: 
-            for e in a:
-                out += e + "+"
-        out += ","
-    out += ")+"
+        part = 0
+        for e in a:
+            part += pos(e)
+        out = Max(out, part)
 
     return out
+
 
 number_cylinders = [2,2]  # 1 marked point on top and 2 on bottom
 starting_cylinders = ["A", "A"]
@@ -127,6 +124,5 @@ attacks = compute_attacks(cylinders, number_cylinders)
 print(attacks)
 
 for i in range(len(cylinders)):
-    print(cylinders[i].name(), " -> ", cylinders[i].name(), " - t(", 
-          process_attack(attacks[i]["top"]),
-          process_attack(attacks[i]["bottom"])[:-1], ")", sep='')
+    print(cylinders[i].name(), " -> ", pos(cylinders[i].name()) - pos('t') *
+          (process_attack(attacks[i]["top"])+process_attack(attacks[i]["bottom"])), sep='')
