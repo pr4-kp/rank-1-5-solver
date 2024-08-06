@@ -1,13 +1,17 @@
 from h2 import *
 import re
 from itertools import product
+from pprint import pprint
+
+solution_number = 1
 
 # from Paul's email: we won't have to check for rank 1.5s when 
 # there is only one cylinder on the top or bottom
-ncys6 = [[2, 6], [3, 5], [4, 4], [5, 3], [6, 2]]
-ncys5 = [[2, 5], [3, 4], [4, 3], [5, 2]]
-ncys4 = [[2, 4], [3, 3], [4, 2]]
-ncys3 = [[2, 3], [3, 2]]
+cylinder_counts_leq_6 = ([[2, 2]],
+                         [[2, 3], [3, 2]], 
+                         [[2, 4], [3, 3], [4, 2]],
+                         [[2, 5], [3, 4], [4, 3], [5, 2]],
+                         [[2, 6], [3, 5], [4, 4], [5, 3], [6, 2]])
 scys = [["A", "A"], ["A", "B"], ["B", "A"], ["B", "B"]]
 
 def process_max(eqn: str) -> list[str]:
@@ -62,6 +66,7 @@ def create_rel_def_condition(cylinders, number_cylinders):
     rel_def_condition = a_sum_top * b_sum_bottom - b_sum_top * a_sum_bottom
     return rel_def_condition
 
+
 def create_sage_code(cylinders, number_cylinders, attack_formulas, f):
     """
     create the sage code and write it to the file f
@@ -95,77 +100,85 @@ def create_sage_code(cylinders, number_cylinders, attack_formulas, f):
         f.write("ideal(" + eq + ",A_0-1,B_0-1),\n")
     f.write("]\n")
 
-def generate(number_cylinders, top_cylinders, bottom_cylinders, starting_cylinders):
-    if top_cylinders[0] == 'B':
-        return
 
-    try:
-        cylinders = generate_cylinders(
-            number_cylinders, top_cylinders, bottom_cylinders, starting_cylinders)
-    except ValueError as e:
-        print(e)
-        return 
+def generate(surface, file_name):
+    if surface.top_cylinders[0] == 'B':
+        return
 
     # we need to find the index of the first A and B cylinder to
     # compare out ratios to (these ones will be assumed to be 1, or our equation will be solve in terms of them)
     first = {'A': -1, 'B': -1}
 
-    for i in range(len(cylinders)):
-        if cylinders[i].label == 'A':
+    for i in range(len(surface)):
+        if surface[i].label == 'A':
             first['A'] = i
             break
-    for i in range(len(cylinders)):
-        if cylinders[i].label == 'B':
+    for i in range(len(surface)):
+        if surface[i].label == 'B':
             first['B'] = i
             break
 
-    attack_data = compute_attacks(cylinders, number_cylinders)
+    # get the attack speed from top and bottom for each cylinder 
+    attack_data = surface.compute_attacks()
+
+    for i in range(len(surface)):
+        if process_attack(attack_data[i]['top']) + process_attack(attack_data[i]['bottom']) == 0:
+            return
+
     attack_formulas = []
 
-    # for each cylinder, print how much attack is coming from the top and bottom 
-    # for i in range(len(cylinders)):
-    #     print(cylinders[i].name(), "->", process_attack(attack_data[i]["top"]) +
-    #         process_attack(attack_data[i]["bottom"]))
+    # print attack speed from the top and bottom 
+    for i in range(len(surface)):
+        print(surface[i].name(), "->", process_attack(attack_data[i]["top"]) +
+            process_attack(attack_data[i]["bottom"]))
+
     mathematica_code = ""
 
-    sage_code = []
-
-    for i in range(len(cylinders)):
+    # create attack formulas
+    for i in range(len(surface)):
         # Formula: A_0 * (attack_speed A_i) - A_i * (attack_speed A_0) = 0
-        attack_formulas.append(pos(cylinders[i].label + '_0')
+        attack_formulas.append(pos(surface[i].label + '_0')
                             * (process_attack(attack_data[i]["top"])+process_attack(attack_data[i]["bottom"]))
-                            - pos(cylinders[i].name())
-                            * (process_attack(attack_data[first[cylinders[i].label]]["top"])
-                            + process_attack(attack_data[first[cylinders[i].label]]["bottom"])))
+                            - pos(surface[i].name())
+                            * (process_attack(attack_data[first[surface[i].label]]["top"])
+                            + process_attack(attack_data[first[surface[i].label]]["bottom"])))
         
-        # the solutions are positive
-        mathematica_code += cylinders[i].name() + ">0,"
+        mathematica_code += surface[i].name() + ">0,"
 
         if i not in first.values():
             # print(attack_formulas[i], "=0,", sep='')
             mathematica_code += str(attack_formulas[i]) + "==0,"
 
-    rel_def_condition = create_rel_def_condition(cylinders, number_cylinders)
+    rel_def_condition = create_rel_def_condition(surface, surface.number_cylinders)
     mathematica_code += str(rel_def_condition) + "==0,"
 
     # write results to file
-    f = open("solutions-6-8.txt", 'a')
+    f = open(file_name, 'a')
+    global solution_number
         
     try:
+        # should be faster than just regular solving 
         sols = solve_poly_system(attack_formulas + [rel_def_condition] + [pos('A_0') - 1, pos('B_0') - 1])
         init_printing()
 
         if not sols: # no solutions! rule it out
             f.close()
             return
+        
+        
+        if len(sols) == 1:
+            for val in sols[0]:
+                if val <= 0:
+                    return
 
-        f.write("-----\nCASE:" + str(number_cylinders) + ' '
-                + ' '.join([e.name() for e in cylinders]) + "\n")
+        f.write("-----\n" + str(solution_number) + ". CASE:" + str(surface.number_cylinders) + ' '
+                + ' '.join([e.name() for e in surface]) + "\n")
+        solution_number += 1
 
         f.write("\nFOR MATHEMATICA:\n")
         f.write(mathematica_code.replace(" ", "") + "\n")
 
-        create_sage_code(cylinders, number_cylinders, attack_formulas, f)
+        create_sage_code(surface, surface.number_cylinders, attack_formulas, f)
 
         i = 1
         for e in sols:
@@ -177,23 +190,59 @@ def generate(number_cylinders, top_cylinders, bottom_cylinders, starting_cylinde
             i += 1
             f.write("\n")
     except NotImplementedError as e:
-        f.write("-----\nCASE:" + str(number_cylinders) + ' '
-                + ' '.join([e.name() for e in cylinders]) + "\n")
-
+        f.write("-----\n" + str(solution_number) + ". CASE:" + str(surface.number_cylinders) + ' '
+                + ' '.join([e.name() for e in surface]) + "\n")
+        solution_number += 1
         f.write("\nFOR MATHEMATICA:\n")
         f.write(mathematica_code.replace(" ", "") + "\n")
 
-        create_sage_code(cylinders, number_cylinders, attack_formulas, f)
+        create_sage_code(surface, surface.number_cylinders, attack_formulas, f)
 
         f.write("could not solve, try mathematica!\n")
 
     f.close()
 
 
-# generate([2, 4],  ["A", "A"],  ["B", "B"], ["B", "B"])
+n1 = 2
+n2 = 3
+surface = TransSurfH2([n1, n2], ['A','A'], ['B','B'], ['A', 'B'])
 
-for number_cylinders in ncys6:
-    for top_cylinders, bottom_cylinders, starting_cylinders in product(scys, scys, scys):
-        # switching the labeling of A and B cylinders will result in the same translation surface,
-        # so only consider when the first cylinder is A
-        generate(number_cylinders, top_cylinders, bottom_cylinders, starting_cylinders)
+modify_marked_points: set[int] = set()
+if (n1 < n1 + 1 and n1 + 1 < n1 + n2):
+    modify_marked_points.add(n1 + 1)
+if (n1 < n1 + 2 and n1 + 2 < n1 + n2):
+    modify_marked_points.add(n1 + 2)
+if (n1 < n1 + n2 - 2 and n1 + n2 - 2 < n1 + n2):
+    modify_marked_points.add(n1 + n2 - 2)
+if (n1 < n1 + n2 - 1 and n1 + n2 - 1 < n1 + n2):
+    modify_marked_points.add(n1 + n2 - 1)
+
+print(modify_marked_points)
+combos = list(product([['l'],['r'],['l','r']], repeat=len(modify_marked_points)))
+print(combos)
+
+# tomorrow idea: implement this and run stuff! 
+
+attacks = surface.compute_attacks()
+for i in range(len(surface)):
+    print(surface[i].name(), '->', attacks[i])
+
+# # print attack speed from the top and bottom
+# for i in range(len(cylinders)):
+#     print(cylinders[i].name(), "->", process_attack(attack_data[i]["top"]) +
+#         process_attack(attack_data[i]["bottom"]))
+
+# for number_cylinders in [[2, 5], [3, 4], [4, 3], [5, 2]]:
+#     for top_cylinders, bottom_cylinders, starting_cylinders in product(scys, scys, scys):
+#         # switching the labeling of A and B cylinders will result in the same translation surface
+#         # so only consider when the first cylinder is A
+#         generate(TransSurfH2(number_cylinders, top_cylinders,
+#                  bottom_cylinders, starting_cylinders), "test.txt")
+
+
+# for number_configs in cylinder_counts_leq_6:
+#     for number_cylinders in number_configs:
+#         for top_cylinders, bottom_cylinders, starting_cylinders in product(scys, scys, scys):
+#             # switching the labeling of A and B cylinders will result in the same translation surface,
+#             # so only consider when the first cylinder is A
+#             generate(number_cylinders, top_cylinders, bottom_cylinders, starting_cylinders)
