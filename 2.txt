@@ -1,0 +1,180 @@
+-----
+1. CASE:[2, 2] A_0 B_0 A_1 B_1
+[['l'], ['l'], ['l'], ['l']]
+
+FOR MATHEMATICA:
+A_0>0,B_0>0,A_1>0,A_0*(B_0+B_1)-A_1*(B_0+B_1)==0,B_1>0,B_0*(A_0+A_1)-B_1*(A_0+A_1)==0,A_0*B_1-A_1*B_0==0,
+
+FOR SAGE (to convert to Groebner basis):
+A_0, B_0, A_1, B_1 = QQ["A_0, B_0, A_1, B_1"].gens()
+I_list = [ideal(0,0,A_0*(B_0 + B_1) - A_1*(B_0 + B_1),B_0*(A_0 + A_1) - B_1*(A_0 + A_1),A_0*B_1 - A_1*B_0,A_0-1,B_0-1),
+]
+Solution 1:
+(1, -1, 1, -1)
+Solution 2:
+(1, 1, 1, 1)
+-----
+2. CASE:[2, 2] A_0 B_0 A_1 B_1
+[['l'], ['l'], ['l'], ['r']]
+
+FOR MATHEMATICA:
+A_0>0,B_0>0,A_1>0,A_0*(B_1+Max(B_0,B_1))-A_1*B_0==0,B_1>0,-A_0*B_1+B_0*(A_1+Max(A_0,A_1))==0,A_0*B_1-A_1*B_0==0,
+
+FOR SAGE (to convert to Groebner basis):
+A_0, B_0, A_1, B_1 = QQ["A_0, B_0, A_1, B_1"].gens()
+I_list = [ideal(0,0,A_0*(B_1 + B_0) - A_1*B_0,-A_0*B_1 + B_0*(A_1 + A_0),A_0*B_1 - A_1*B_0,A_0-1,B_0-1),
+ideal(0,0,A_0*(B_1 + B_0) - A_1*B_0,-A_0*B_1 + B_0*(A_1 + A_1),A_0*B_1 - A_1*B_0,A_0-1,B_0-1),
+ideal(0,0,A_0*(B_1 + B_1) - A_1*B_0,-A_0*B_1 + B_0*(A_1 + A_0),A_0*B_1 - A_1*B_0,A_0-1,B_0-1),
+ideal(0,0,A_0*(B_1 + B_1) - A_1*B_0,-A_0*B_1 + B_0*(A_1 + A_1),A_0*B_1 - A_1*B_0,A_0-1,B_0-1),
+]
+could not solve, try mathematica!
+-----
+4. CASE:[2, 2] A_0 B_0 A_1 B_1
+[['l'], ['l'], ['l'], ['l']]
+
+FOR MATHEMATICA:
+A_0>0,B_0>0,A_1>0,A_0*(B_0+B_1)-A_1*(B_0+B_1)==0,B_1>0,B_0*(A_0+A_1)-B_1*(A_0+A_1)==0,A_0*B_1-A_1*B_0==0,
+
+FOR SAGE (to convert to Groebner basis):
+A_0, B_0, A_1, B_1 = QQ["A_0, B_0, A_1, B_1"].gens()
+I_list = [ideal(0,0,A_0*(B_0 + B_1) - A_1*(B_0 + B_1),B_0*(A_0 + A_1) - B_1*(A_0 + A_1),A_0*B_1 - A_1*B_0,A_0-1,B_0-1),
+]
+Solution 1:
+(1, -1, 1, -1)
+Solution 2:
+(1, 1, 1, 1)
+-----
+5. CASE:[2, 2] A_0 B_0 A_1 B_1
+[['l'], ['l'], ['l'], ['r']]
+
+FOR MATHEMATICA:
+A_0>0,B_0>0,A_1>0,A_0*(B_1+Max(B_0,B_1))-A_1*B_0==0,B_1>0,-A_0*B_1+B_0*(A_1+Max(A_0,A_1))==0,A_0*B_1-A_1*B_0==0,
+
+FOR SAGE (to convert to Groebner basis):
+A_0, B_0, A_1, B_1 = QQ["A_0, B_0, A_1, B_1"].gens()
+I_list = [ideal(0,0,A_0*(B_1 + B_0) - A_1*B_0,-A_0*B_1 + B_0*(A_1 + A_0),A_0*B_1 - A_1*B_0,A_0-1,B_0-1),
+ideal(0,0,A_0*(B_1 + B_0) - A_1*B_0,-A_0*B_1 + B_0*(A_1 + A_1),A_0*B_1 - A_1*B_0,A_0-1,B_0-1),
+ideal(0,0,A_0*(B_1 + B_1) - A_1*B_0,-A_0*B_1 + B_0*(A_1 + A_0),A_0*B_1 - A_1*B_0,A_0-1,B_0-1),
+ideal(0,0,A_0*(B_1 + B_1) - A_1*B_0,-A_0*B_1 + B_0*(A_1 + A_1),A_0*B_1 - A_1*B_0,A_0-1,B_0-1),
+]
+could not solve, try mathematica!
+-----
+7. CASE:[2, 2] A_0 B_0 A_1 B_1
+[['l'], ['l'], ['l'], ['l']]
+
+FOR MATHEMATICA:
+A_0>0,B_0>0,A_1>0,A_0*(B_0+B_1)-A_1*(B_0+B_1)==0,B_1>0,B_0*(A_0+A_1)-B_1*(A_0+A_1)==0,A_0*B_1-A_1*B_0==0,
+
+FOR SAGE (to convert to Groebner basis):
+A_0, B_0, A_1, B_1 = QQ["A_0, B_0, A_1, B_1"].gens()
+I_list = [ideal(0,0,A_0*(B_0 + B_1) - A_1*(B_0 + B_1),B_0*(A_0 + A_1) - B_1*(A_0 + A_1),A_0*B_1 - A_1*B_0,A_0-1,B_0-1),
+]
+Solution 1:
+(1, -1, 1, -1)
+Solution 2:
+(1, 1, 1, 1)
+-----
+8. CASE:[2, 2] A_0 B_0 A_1 B_1
+[['l'], ['l'], ['l'], ['r']]
+
+FOR MATHEMATICA:
+A_0>0,B_0>0,A_1>0,A_0*(B_1+Max(B_0,B_1))-A_1*B_0==0,B_1>0,-A_0*B_1+B_0*(A_1+Max(A_0,A_1))==0,A_0*B_1-A_1*B_0==0,
+
+FOR SAGE (to convert to Groebner basis):
+A_0, B_0, A_1, B_1 = QQ["A_0, B_0, A_1, B_1"].gens()
+I_list = [ideal(0,0,A_0*(B_1 + B_0) - A_1*B_0,-A_0*B_1 + B_0*(A_1 + A_0),A_0*B_1 - A_1*B_0,A_0-1,B_0-1),
+ideal(0,0,A_0*(B_1 + B_0) - A_1*B_0,-A_0*B_1 + B_0*(A_1 + A_1),A_0*B_1 - A_1*B_0,A_0-1,B_0-1),
+ideal(0,0,A_0*(B_1 + B_1) - A_1*B_0,-A_0*B_1 + B_0*(A_1 + A_0),A_0*B_1 - A_1*B_0,A_0-1,B_0-1),
+ideal(0,0,A_0*(B_1 + B_1) - A_1*B_0,-A_0*B_1 + B_0*(A_1 + A_1),A_0*B_1 - A_1*B_0,A_0-1,B_0-1),
+]
+could not solve, try mathematica!
+-----
+10. CASE:[2, 2] A_0 B_0 A_1 B_1
+[['l'], ['l'], ['l'], ['l']]
+
+FOR MATHEMATICA:
+A_0>0,B_0>0,A_1>0,A_0*(B_0+B_1)-A_1*(B_0+B_1)==0,B_1>0,B_0*(A_0+A_1)-B_1*(A_0+A_1)==0,A_0*B_1-A_1*B_0==0,
+
+FOR SAGE (to convert to Groebner basis):
+A_0, B_0, A_1, B_1 = QQ["A_0, B_0, A_1, B_1"].gens()
+I_list = [ideal(0,0,A_0*(B_0 + B_1) - A_1*(B_0 + B_1),B_0*(A_0 + A_1) - B_1*(A_0 + A_1),A_0*B_1 - A_1*B_0,A_0-1,B_0-1),
+]
+Solution 1:
+(1, -1, 1, -1)
+Solution 2:
+(1, 1, 1, 1)
+-----
+11. CASE:[2, 2] A_0 B_0 A_1 B_1
+[['l'], ['l'], ['l'], ['r']]
+
+FOR MATHEMATICA:
+A_0>0,B_0>0,A_1>0,A_0*(B_1+Max(B_0,B_1))-A_1*B_0==0,B_1>0,-A_0*B_1+B_0*(A_1+Max(A_0,A_1))==0,A_0*B_1-A_1*B_0==0,
+
+FOR SAGE (to convert to Groebner basis):
+A_0, B_0, A_1, B_1 = QQ["A_0, B_0, A_1, B_1"].gens()
+I_list = [ideal(0,0,A_0*(B_1 + B_0) - A_1*B_0,-A_0*B_1 + B_0*(A_1 + A_0),A_0*B_1 - A_1*B_0,A_0-1,B_0-1),
+ideal(0,0,A_0*(B_1 + B_0) - A_1*B_0,-A_0*B_1 + B_0*(A_1 + A_1),A_0*B_1 - A_1*B_0,A_0-1,B_0-1),
+ideal(0,0,A_0*(B_1 + B_1) - A_1*B_0,-A_0*B_1 + B_0*(A_1 + A_0),A_0*B_1 - A_1*B_0,A_0-1,B_0-1),
+ideal(0,0,A_0*(B_1 + B_1) - A_1*B_0,-A_0*B_1 + B_0*(A_1 + A_1),A_0*B_1 - A_1*B_0,A_0-1,B_0-1),
+]
+could not solve, try mathematica!
+-----
+13. CASE:[2, 2] A_0 B_0 B_1 A_1
+[['l'], ['l'], ['l'], ['l']]
+
+FOR MATHEMATICA:
+A_0>0,B_0>0,B_1>0,B_0*(A_0+A_1)-B_1*(A_0+A_1)==0,A_1>0,A_0*(B_0+B_1)-A_1*(B_0+B_1)==0,A_0*B_1-A_1*B_0==0,
+
+FOR SAGE (to convert to Groebner basis):
+A_0, B_0, B_1, A_1 = QQ["A_0, B_0, B_1, A_1"].gens()
+I_list = [ideal(0,0,B_0*(A_0 + A_1) - B_1*(A_0 + A_1),A_0*(B_0 + B_1) - A_1*(B_0 + B_1),A_0*B_1 - A_1*B_0,A_0-1,B_0-1),
+]
+Solution 1:
+(1, -1, 1, -1)
+Solution 2:
+(1, 1, 1, 1)
+-----
+15. CASE:[2, 2] A_0 B_0 B_1 A_1
+[['l'], ['l'], ['l'], ['l']]
+
+FOR MATHEMATICA:
+A_0>0,B_0>0,B_1>0,B_0*(A_0+A_1)-B_1*(A_0+A_1)==0,A_1>0,A_0*(B_0+B_1)-A_1*(B_0+B_1)==0,A_0*B_1-A_1*B_0==0,
+
+FOR SAGE (to convert to Groebner basis):
+A_0, B_0, B_1, A_1 = QQ["A_0, B_0, B_1, A_1"].gens()
+I_list = [ideal(0,0,B_0*(A_0 + A_1) - B_1*(A_0 + A_1),A_0*(B_0 + B_1) - A_1*(B_0 + B_1),A_0*B_1 - A_1*B_0,A_0-1,B_0-1),
+]
+Solution 1:
+(1, -1, 1, -1)
+Solution 2:
+(1, 1, 1, 1)
+-----
+17. CASE:[2, 2] A_0 B_0 B_1 A_1
+[['l'], ['l'], ['l'], ['l']]
+
+FOR MATHEMATICA:
+A_0>0,B_0>0,B_1>0,B_0*(A_0+A_1)-B_1*(A_0+A_1)==0,A_1>0,A_0*(B_0+B_1)-A_1*(B_0+B_1)==0,A_0*B_1-A_1*B_0==0,
+
+FOR SAGE (to convert to Groebner basis):
+A_0, B_0, B_1, A_1 = QQ["A_0, B_0, B_1, A_1"].gens()
+I_list = [ideal(0,0,B_0*(A_0 + A_1) - B_1*(A_0 + A_1),A_0*(B_0 + B_1) - A_1*(B_0 + B_1),A_0*B_1 - A_1*B_0,A_0-1,B_0-1),
+]
+Solution 1:
+(1, -1, 1, -1)
+Solution 2:
+(1, 1, 1, 1)
+-----
+19. CASE:[2, 2] A_0 B_0 B_1 A_1
+[['l'], ['l'], ['l'], ['l']]
+
+FOR MATHEMATICA:
+A_0>0,B_0>0,B_1>0,B_0*(A_0+A_1)-B_1*(A_0+A_1)==0,A_1>0,A_0*(B_0+B_1)-A_1*(B_0+B_1)==0,A_0*B_1-A_1*B_0==0,
+
+FOR SAGE (to convert to Groebner basis):
+A_0, B_0, B_1, A_1 = QQ["A_0, B_0, B_1, A_1"].gens()
+I_list = [ideal(0,0,B_0*(A_0 + A_1) - B_1*(A_0 + A_1),A_0*(B_0 + B_1) - A_1*(B_0 + B_1),A_0*B_1 - A_1*B_0,A_0-1,B_0-1),
+]
+Solution 1:
+(1, -1, 1, -1)
+Solution 2:
+(1, 1, 1, 1)

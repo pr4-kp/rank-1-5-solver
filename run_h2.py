@@ -1,7 +1,8 @@
 from h2 import *
 import re
 from itertools import product
-from pprint import pprint
+import signal
+from contextlib import contextmanager
 
 solution_number = 1
 
@@ -13,6 +14,23 @@ cylinder_counts_leq_6 = ([[2, 2]],
                          [[2, 5], [3, 4], [4, 3], [5, 2]],
                          [[2, 6], [3, 5], [4, 4], [5, 3], [6, 2]])
 scys = [["A", "A"], ["A", "B"], ["B", "A"], ["B", "B"]]
+
+
+class TimeoutException(Exception):
+    pass
+
+
+@contextmanager
+def time_limit(seconds):
+    def signal_handler(signum, frame):
+        raise TimeoutException("Timed out!")
+    signal.signal(signal.SIGALRM, signal_handler)
+    signal.alarm(seconds)
+    try:
+        yield
+    finally:
+        signal.alarm(0)
+
 
 def process_max(eqn: str) -> list[str]:
     """
@@ -67,6 +85,46 @@ def create_rel_def_condition(cylinders, number_cylinders):
     return rel_def_condition
 
 
+def generate_mathematica_code(surface: TransSurfH2):
+
+    first = {'A': -1, 'B': -1}
+
+    for i in range(len(surface)):
+        if surface[i].label == 'A':
+            first['A'] = i
+            break
+    for i in range(len(surface)):
+        if surface[i].label == 'B':
+            first['B'] = i
+            break
+
+    attack_data = surface.compute_attacks()
+    attack_formulas = []
+
+    mathematica_code = ""
+
+    # create attack formulas
+    for i in range(len(surface)):
+        # Formula: A_0 * (attack_speed A_i) - A_i * (attack_speed A_0) = 0
+        attack_formulas.append(pos(surface[i].label + '_0')
+                               * (process_attack(attack_data[i]["top"])+process_attack(attack_data[i]["bottom"]))
+                               - pos(surface[i].name())
+                               * (process_attack(attack_data[first[surface[i].label]]["top"])
+                                  + process_attack(attack_data[first[surface[i].label]]["bottom"])))
+
+        mathematica_code += surface[i].name() + ">0,"
+
+        if i not in first.values():
+            # print(attack_formulas[i], "=0,", sep='')
+            mathematica_code += str(attack_formulas[i]) + "==0,"
+
+    rel_def_condition = create_rel_def_condition(
+        surface, surface.number_cylinders)
+    mathematica_code += str(rel_def_condition) + "==0,"
+
+    return mathematica_code
+
+
 def create_sage_code(cylinders, number_cylinders, attack_formulas, f):
     """
     create the sage code and write it to the file f
@@ -101,9 +159,34 @@ def create_sage_code(cylinders, number_cylinders, attack_formulas, f):
     f.write("]\n")
 
 
-def generate(surface, file_name):
+def generate(surface: TransSurfH2, file_name):
+    # chop half of the things to test
     if surface.top_cylinders[0] == 'B':
         return
+    
+    if (surface.number_cylinders[1] == 2 and surface.cylinders[-1].label == surface.cylinders[-2].label):
+        return
+    
+    # devious attacked by 4 cylinders case
+    if (surface.number_cylinders[1] == 5 
+            and surface.cylinders[-1].label == surface.cylinders[-2].label
+            and surface.cylinders[-2].label != surface.cylinders[-3].label
+            and surface.cylinders[-3].label != surface.cylinders[-4].label
+            and surface.cylinders[-4].label == surface.cylinders[-5].label):
+        return
+
+    if (surface.cylinders[0].label == surface.cylinders[-1].label 
+        and surface.cylinders[-1].label == surface.cylinders[-2].label):
+        return
+    
+    if (surface.number_cylinders[1] > 3
+        and surface.cylinders[-1] == surface.cylinders[surface.number_cylinders[0]] 
+        and surface.cylinders[surface.number_cylinders[0]] == surface.cylinders[surface.number_cylinders[0] + 1]):
+        return
+    
+    for i in range(surface.number_cylinders[0] + surface.number_cylinders[1] - 2):
+        if (surface.cylinders[i] == surface.cylinders[i + 1] and surface.cylinders[i + 1] == surface.cylinders[i + 2]):
+            return
 
     # we need to find the index of the first A and B cylinder to
     # compare out ratios to (these ones will be assumed to be 1, or our equation will be solve in terms of them)
@@ -127,12 +210,11 @@ def generate(surface, file_name):
 
     attack_formulas = []
 
-    # print attack speed from the top and bottom 
+    # print surface details
+    print(surface.number_cylinders, surface.top_cylinders, surface.bottom_cylinders, surface.starting_cylinders)
     for i in range(len(surface)):
         print(surface[i].name(), "->", process_attack(attack_data[i]["top"]) +
             process_attack(attack_data[i]["bottom"]))
-
-    mathematica_code = ""
 
     # create attack formulas
     for i in range(len(surface)):
@@ -142,15 +224,10 @@ def generate(surface, file_name):
                             - pos(surface[i].name())
                             * (process_attack(attack_data[first[surface[i].label]]["top"])
                             + process_attack(attack_data[first[surface[i].label]]["bottom"])))
-        
-        mathematica_code += surface[i].name() + ">0,"
-
-        if i not in first.values():
-            # print(attack_formulas[i], "=0,", sep='')
-            mathematica_code += str(attack_formulas[i]) + "==0,"
 
     rel_def_condition = create_rel_def_condition(surface, surface.number_cylinders)
-    mathematica_code += str(rel_def_condition) + "==0,"
+
+    mathematica_code = generate_mathematica_code(surface)
 
     # write results to file
     f = open(file_name, 'a')
@@ -158,21 +235,28 @@ def generate(surface, file_name):
         
     try:
         # should be faster than just regular solving 
-        sols = solve_poly_system(attack_formulas + [rel_def_condition] + [pos('A_0') - 1, pos('B_0') - 1])
+        with time_limit(60):
+            sols = solve_poly_system(attack_formulas + [rel_def_condition] + [pos('A_0') - 1, pos('B_0') - 1])
         init_printing()
 
         if not sols: # no solutions! rule it out
             f.close()
             return
         
+        bad_sols = 0
+        print(sols)
+        for sol in sols:
+            if any((not ele.is_real or ele <= 0) for ele in sol):
+                bad_sols += 1
         
-        if len(sols) == 1:
-            for val in sols[0]:
-                if val <= 0:
-                    return
+        # only negative solutions is bad
+        if (bad_sols == len(sols)):
+            f.close()
+            return 
 
         f.write("-----\n" + str(solution_number) + ". CASE:" + str(surface.number_cylinders) + ' '
                 + ' '.join([e.name() for e in surface]) + "\n")
+        f.write(str(surface.marked_points) + "\n")
         solution_number += 1
 
         f.write("\nFOR MATHEMATICA:\n")
@@ -186,12 +270,12 @@ def generate(surface, file_name):
             f.write(str(e))
             # for k in e:
             #     f.write(str(k) + " = " + str(e[k].evalf()) + "\n")
-            pprint(e, use_unicode=True)
             i += 1
             f.write("\n")
-    except NotImplementedError as e:
+    except (TimeoutException, NotImplementedError) as e:
         f.write("-----\n" + str(solution_number) + ". CASE:" + str(surface.number_cylinders) + ' '
                 + ' '.join([e.name() for e in surface]) + "\n")
+        f.write(str(surface.marked_points) + "\n")
         solution_number += 1
         f.write("\nFOR MATHEMATICA:\n")
         f.write(mathematica_code.replace(" ", "") + "\n")
@@ -202,47 +286,65 @@ def generate(surface, file_name):
 
     f.close()
 
+# n1 = 3
+# n2 = 2
+# top_cylinders = ['A', 'B']
+# bottom_cylinders = ['A', 'A']
+# starting_cylinders = ['B', 'B']
+# surface = TransSurfH2([n1, n2], top_cylinders,
+#                       bottom_cylinders, starting_cylinders)
+# surface.marked_points[-1] = ['l', 'r']
 
-n1 = 2
-n2 = 3
-surface = TransSurfH2([n1, n2], ['A','A'], ['B','B'], ['A', 'B'])
+# for at in surface.compute_attacks():
+#     print(at)
 
-modify_marked_points: set[int] = set()
-if (n1 < n1 + 1 and n1 + 1 < n1 + n2):
-    modify_marked_points.add(n1 + 1)
-if (n1 < n1 + 2 and n1 + 2 < n1 + n2):
-    modify_marked_points.add(n1 + 2)
-if (n1 < n1 + n2 - 2 and n1 + n2 - 2 < n1 + n2):
-    modify_marked_points.add(n1 + n2 - 2)
-if (n1 < n1 + n2 - 1 and n1 + n2 - 1 < n1 + n2):
-    modify_marked_points.add(n1 + n2 - 1)
+for number_configs in cylinder_counts_leq_6:
+    for number_cylinders in number_configs:
+        for top_cylinders, bottom_cylinders, starting_cylinders in product(scys, scys, scys):
+            # switching the labeling of A and B cylinders will result in the same translation surface
+            # so only consider when the first cylinder is A
+            n1 = number_cylinders[0]
+            n2 = number_cylinders[1]
 
-print(modify_marked_points)
-combos = list(product([['l'],['r'],['l','r']], repeat=len(modify_marked_points)))
-print(combos)
+            surface = TransSurfH2([n1, n2], top_cylinders,
+                                bottom_cylinders, starting_cylinders)
 
-# tomorrow idea: implement this and run stuff! 
+            modify_marked_points: set[int] = set()
+            if (n1 < n1 + 1 and n1 + 1 < n1 + n2):
+                modify_marked_points.add(n1 + 1)
+            if (n1 < n1 + 2 and n1 + 2 < n1 + n2):
+                modify_marked_points.add(n1 + 2)
+            if (n1 < n1 + n2 - 2 and n1 + n2 - 2 < n1 + n2):
+                modify_marked_points.add(n1 + n2 - 2)
+            if (n1 < n1 + n2 - 1 and n1 + n2 - 1 < n1 + n2):
+                modify_marked_points.add(n1 + n2 - 1)
 
-attacks = surface.compute_attacks()
-for i in range(len(surface)):
-    print(surface[i].name(), '->', attacks[i])
+            seen_attacks = set()
+            to_evaluate = []
+            modify_marked_points = list(modify_marked_points)
 
-# # print attack speed from the top and bottom
-# for i in range(len(cylinders)):
-#     print(cylinders[i].name(), "->", process_attack(attack_data[i]["top"]) +
-#         process_attack(attack_data[i]["bottom"]))
+            marked_pt_configs = list(
+                product([['l'], ['r'], ['l', 'r']], repeat=len(modify_marked_points)))
 
-# for number_cylinders in [[2, 5], [3, 4], [4, 3], [5, 2]]:
-#     for top_cylinders, bottom_cylinders, starting_cylinders in product(scys, scys, scys):
-#         # switching the labeling of A and B cylinders will result in the same translation surface
-#         # so only consider when the first cylinder is A
-#         generate(TransSurfH2(number_cylinders, top_cylinders,
-#                  bottom_cylinders, starting_cylinders), "test.txt")
+            for config in marked_pt_configs:
+                surface = TransSurfH2([n1, n2], top_cylinders,
+                                      bottom_cylinders, starting_cylinders)
+                for pt_idx in range(len(modify_marked_points)):
+                    surface.marked_points[modify_marked_points[pt_idx]] = config[pt_idx]
 
+                if generate_mathematica_code(surface) not in seen_attacks:
+                    seen_attacks.add(generate_mathematica_code(surface))
+                    to_evaluate.append(surface)
+                else:
+                    for i in range(len(to_evaluate)):
+                        # print(generate_mathematica_code(surface), "\n",
+                        #       generate_mathematica_code(to_evaluate[i]))
+                        if (generate_mathematica_code(surface) == generate_mathematica_code(to_evaluate[i])):
+                            if (surface.number_marked_points() <= to_evaluate[i].number_marked_points()):
+                                del to_evaluate[i]
+                                to_evaluate.append(surface)
+                            break 
 
-# for number_configs in cylinder_counts_leq_6:
-#     for number_cylinders in number_configs:
-#         for top_cylinders, bottom_cylinders, starting_cylinders in product(scys, scys, scys):
-#             # switching the labeling of A and B cylinders will result in the same translation surface,
-#             # so only consider when the first cylinder is A
-#             generate(number_cylinders, top_cylinders, bottom_cylinders, starting_cylinders)
+            for s in to_evaluate:
+                if s.number_marked_points() <= 6:
+                    generate(s, str(s.number_marked_points()) + ".txt")

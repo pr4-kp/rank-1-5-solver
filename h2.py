@@ -19,7 +19,6 @@ class TransSurfH2:
     bottom_cylinders: list[str]
     starting_cylinders: list[str]
     marked_points: list[list[str]]
-    attacks: list
 
     def __init__(self, number_cylinders: list[int], top_cylinders: list[str],
                  bottom_cylinders: list[str], starting_cylinders: list[str]):
@@ -109,13 +108,14 @@ class TransSurfH2:
                 down2 = (start + 2) % n
 
                 if (start == self.number_cylinders[0] - 1):
-                    if (self.cylinders[down1].label != self.cylinders[start].label
-                            and self.cylinders[down2].label != self.cylinders[start].label 
+                    if (self.number_cylinders[1] > 2 
+                            and self[down1].label != self[start].label
+                            and self[down2].label != self[start].label 
                             and 'l' in self.marked_points[down2 + 1]):
-                        return [self.cylinders[down1].name(), self.cylinders[down2].name()]
-                    elif (self.cylinders[down1].label != self.cylinders[start].label
+                        return [self[down1].name(), self[down2].name()]
+                    elif (self[down1].label != self[start].label
                           and 'l' in self.marked_points[down1 + 1]):
-                        return [self.cylinders[down1].name()]
+                        return [self[down1].name()]
                     else: 
                         return []
                 elif (start == self.number_cylinders[0] - 2):
@@ -143,7 +143,8 @@ class TransSurfH2:
                 above2 = (start - 2) % n
                 
                 if (start == 0):
-                    if (self.cylinders[above1].label != self.cylinders[start].label
+                    if (self.number_cylinders[1] > 2
+                            and self.cylinders[above1].label != self.cylinders[start].label
                             and self.cylinders[above2].label != self.cylinders[start].label
                             and 'l' in self.marked_points[above2]):
                         return [self.cylinders[above1].name(), self.cylinders[above2].name()]
@@ -184,7 +185,8 @@ class TransSurfH2:
                 if (start == self.number_cylinders[0] + self.number_cylinders[1] - 1):
                     down1 = self.number_cylinders[0]
                     down2 = self.number_cylinders[0] + 1
-                    if (self.cylinders[down1].label != self.cylinders[start].label
+                    if (self.number_cylinders[1] > 2 
+                            and self.cylinders[down1].label != self.cylinders[start].label
                             and self.cylinders[down2].label != self.cylinders[start].label 
                             and 'r' in self.marked_points[down2 + 1]):
                         return [self.cylinders[down1].name(), self.cylinders[down2].name()]
@@ -212,7 +214,8 @@ class TransSurfH2:
                 if (start == self.number_cylinders[0]):
                     above1 = self.number_cylinders[0] + self.number_cylinders[1] - 1
                     above2 = self.number_cylinders[0] + self.number_cylinders[1] - 2
-                    if (self.cylinders[above1].label != self.cylinders[start].label
+                    if (self.number_cylinders[1] > 2 
+                            and self.cylinders[above1].label != self.cylinders[start].label
                             and self.cylinders[above2].label != self.cylinders[start].label
                             and 'r' in self.marked_points[above2]):
                         return [self.cylinders[above1].name(), self.cylinders[above2].name()]
@@ -256,8 +259,16 @@ class TransSurfH2:
             if i == n - 1 or i == n - 2:
                 attacks[i]['bottom'].append(check_direction2(i, "bottom"))
 
-        self.attacks = attacks
         return attacks
+
+    def number_marked_points(self) -> int:
+        pts = 0
+
+        for i in range(len(self.cylinders)):
+            if (i not in {0, self.number_cylinders[0]}):
+                pts += len(self.marked_points[i])
+
+        return pts
 
 
 def pos(num):
