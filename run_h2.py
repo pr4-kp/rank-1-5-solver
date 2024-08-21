@@ -1,8 +1,9 @@
-from h2 import *
+from transsurfs.h2 import *
 import re
 from itertools import product
 import signal
 from contextlib import contextmanager
+import os
 
 solution_number = 1
 
@@ -347,4 +348,4 @@ for number_configs in cylinder_counts_leq_6:
 
             for s in to_evaluate:
                 if s.number_marked_points() <= 6:
-                    generate(s, str(s.number_marked_points()) + ".txt")
+                    generate(s, os.path.join("h2", "data", str(s.number_marked_points()) + ".txt"))

@@ -41,6 +41,7 @@ class TransSurfH2:
         There cannot be only one cylinder in the top/bottom part of the translation surface of genus 2 if it is 
         rank 1.5. The first assertion verifies this.
         """
+        assert (len(number_cylinders) == 2)
         assert (number_cylinders[0] >= 2 and number_cylinders[1] >= 2)
 
         self.number_cylinders = number_cylinders
